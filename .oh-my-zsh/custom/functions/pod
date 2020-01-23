@@ -1,0 +1,7 @@
+pod() { 
+  str="$1"; shift;
+  "$@" "$(kubectl get pods -o name | grep $str)"; 
+}
+
+zmodload zsh/mapfile
+pod $@

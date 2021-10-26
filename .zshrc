@@ -11,15 +11,10 @@ fi
 # Path to your oh-my-zsh installation.
 export ZSH="/Users/davidbenson/.oh-my-zsh"
 
-export ZSH_AUTOSUGGEST_USE_ASYNC=true
-export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=40
-export ZSH_AUTHSUGGEST_STRATEGY=( completion )
-
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-#ZSH_THEME="robbyrussell"
 ZSH_THEME=powerlevel10k/powerlevel10k
 
 # Set list of themes to pick from when loading at random
@@ -39,7 +34,7 @@ ZSH_THEME=powerlevel10k/powerlevel10k
 # DISABLE_AUTO_UPDATE="true"
 
 # Uncomment the following line to automatically update without prompting.
-# DISABLE_UPDATE_PROMPT="true"
+DISABLE_UPDATE_PROMPT="true"
 
 # Uncomment the following line to change how often to auto-update (in days).
 # export UPDATE_ZSH_DAYS=13
@@ -83,21 +78,18 @@ ZSH_THEME=powerlevel10k/powerlevel10k
 plugins=(
   aws
   autojump
+  brew
   docker
   docker-compose
   docker-machine
-  dotnet
-  extract
-  gitfast
   github
+  gitfast
   kubectl
-#  ng
   npm
   osx
   pip
+  sfdx
   yarn
-  zsh-autosuggestions
-#  zsh-history-substring-search
   zsh-syntax-highlighting
 )
 
@@ -131,3 +123,18 @@ source $ZSH/oh-my-zsh.sh
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# This speeds up pasting w/ autosuggest
+# https://github.com/zsh-users/zsh-autosuggestions/issues/238
+pasteinit() {
+  OLD_SELF_INSERT=${${(s.:.)widgets[self-insert]}[2,3]}
+  zle -N self-insert url-quote-magic # I wonder if you'd need `.url-quote-magic`?
+}
+
+pastefinish() {
+  zle -N self-insert $OLD_SELF_INSERT
+}
+zstyle :bracketed-paste-magic paste-init pasteinit
+zstyle :bracketed-paste-magic paste-finish pastefinish
+
+ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)

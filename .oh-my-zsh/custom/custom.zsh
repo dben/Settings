@@ -10,6 +10,31 @@ alias club='short'
 alias ksd='kubectl ksd get secrets -o yaml'
 alias gitx='git update-index --chmod=+x'
 alias ls='ls -AGl'
+function jstart(){
+    issue=$1
+    if [ -n "$issue" ] && [ "$issue" -eq "$issue" ] 2>/dev/null; then
+      issue="PROD-$issue"
+    fi;
+
+    title=$(jira issue view $issue --plain | grep -m 1 '^\s*#' | sed -r 's/[^a-zA-Z0-9]+/-/g' | cut -c2-25)
+    jira issue assign $issue $(jira me)
+    jira issue move $issue "In Development"
+    hub checkout -b "$(hub api user | jq -r ".login")/$issue/${title%*(-)}"
+}
+function jpr(){
+    issue=$1
+    if [ -z "$issue" ]; then
+      issue=$(git branch --show-current | grep -o '[[:alpha:]]\{1,\}-[[:digit:]]\{1,\}')
+    elif [ "$issue" -eq "$issue" ] 2>/dev/null; then
+      issue="PROD-$issue"
+    fi;
+
+    text=$(jira issue view $issue --plain)
+    title="[$issue] $(echo $text | grep -m 1 '^\s*#' | sed -r 's/[^-a-zA-Z0-9.'"'"']+/ /g')"
+    description=$(echo ${text#*- Description*\n} | sed 's/--*\([a-zA-Z0-9 ]*\).*/##\1/g')
+    hub pull-request -a $(hub api user | jq -r ".login") -p -m $title -m $description
+}
+
 function docker-truncate() {
     limactl shell 0 sudo truncate -s 0 $(docker inspect --format="{{.LogPath}}" $1)
 }
